@@ -1,5 +1,5 @@
-# OHDSI on Azure - Expansion Pack
+# Zeus - OHDSI on Azure (but automated)
 
-Welcome to the OHDSI on Azure (Expansion Pack)! 
+Welcome to Zeus!
 
 The objective of this project is to significantly reduce the time and cost for deploying an instance of OHDSI CDM on Azure.
