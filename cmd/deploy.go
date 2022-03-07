@@ -3,7 +3,8 @@ package cmd
 import (
 	"fmt"
 
-	"../util"
+	"zeus/util"
+
 	"github.com/spf13/cobra"
 )
 

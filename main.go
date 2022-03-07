@@ -1,8 +1,9 @@
 package main
 
 import (
+	"zeus/cmd"
+
 	log "github.com/sirupsen/logrus"
-	"github.com/yradsmikham/zeus/cmd"
 )
 
 func main() {
