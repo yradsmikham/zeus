@@ -22,6 +22,8 @@ az account set --subscription <subscription-id>
 zeus init --env dev --org https://dev.azure.com/<organization> --proj <project>
 ```
 
+![zeus init](./docs/zeus_init.gif)
+
 - Importing vocabulary files to Storage Account and inserting them into CDM:
 
 ```
@@ -36,3 +38,5 @@ zeus deploy broadsea-webtools --env dev
 zeus deploy broadsea-methods --env dev
 zeus deploy achilles --env dev
 ```
+
+![zeus deploy](./docs/zeus_deploy.gif)

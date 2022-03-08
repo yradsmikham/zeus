@@ -64,7 +64,7 @@ func azLogin(organization string, project string) (err error) {
 
 // Verify if required pipelines already exist in Azure DevOps sub
 func checkPipelines() (err error) {
-	pipelines := []string{"Vocabulary Build, Vocabulary Release, Broadsea Build", "Broadsea WebTools Release", "Broadsea Methods Release"}
+	pipelines := []string{"Broadsea Build", "Broadsea WebTools Release", "Broadsea Methods Release"}
 	for i, pipeline := range pipelines {
 		num := i + 1
 		log.Info("Verifying pipelines: ", num, " ", pipeline)
