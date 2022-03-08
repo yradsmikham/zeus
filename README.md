@@ -19,21 +19,20 @@ az account set --subscription <subscription-id>
 - Check for prerequisites (i.e. TF, az, azure devops ext, git), import pipelines to Azure DevOps (if they don't already exist)
 
 ```
-zeus init
+zeus init --env dev --org https://dev.azure.com/<organization> --proj <project>
 ```
 
-- Importing vocabulary files to Storage Account and inserting them into CDM
+- Importing vocabulary files to Storage Account and inserting them into CDM:
 
 ```
 zeus vocab upload --path /path/to/vocab/files --storage-account name-of-storage-account
-
 zeus vocab import --env dev
 ```
 
 - Deploy OHDSI applications to environments
 
 ```
-zeus deploy webtools --env dev
-zeus deploy methods --env dev
-zeus deploy atlas --env dev
+zeus deploy broadsea-webtools --env dev
+zeus deploy broadsea-methods --env dev
+zeus deploy achilles --env dev
 ```
