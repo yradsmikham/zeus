@@ -1,25 +1,32 @@
 package cmd
 
 import (
-	"fmt"
-
 	"zeus/util"
 
 	"github.com/spf13/cobra"
 )
 
-var broadsea_app string
+var branch string
 
 // Initializes the configuration for the given environment
-func Deploy(broadsea_app string) (err error) {
-	fmt.Println("Hello, World!")
-	if broadsea_app == "broadsea-webtools" {
-		// Execute Azure DevOps build pipeline to build broadsea-methods docker image
+func Deploy(app string) (err error) {
+	if app == "broadsea-webtools" {
+		// Execute Azure DevOps build pipeline to build Broadsea Docker images
+		if error := util.ExecuteBroadseaBuild(); error != nil {
+			return error
+		}
+		// Execute Azure DevOps build pipeline to deploy broadsea-webtools docker image
+		if error := util.ExecuteBroadseaWebToolsRelease(); error != nil {
+			return error
+		}
+	}
+	if app == "broadsea-methods" {
+		// Execute Azure DevOps build pipeline to build Broadsea Docker images
 		if error := util.ExecuteBroadseaBuild(); error != nil {
 			return error
 		}
 		// Execute Azure DevOps build pipeline to deploy broadsea-methods docker image
-		if error := util.ExecuteBroadseaRelease(); error != nil {
+		if error := util.ExecuteBroadseaMethodsRelease(); error != nil {
 			return error
 		}
 	}
@@ -27,16 +34,20 @@ func Deploy(broadsea_app string) (err error) {
 }
 
 var deployCmd = &cobra.Command{
-	Use:   "deploy <broadsea-application-name> --env <environment-name>",
+	Use:   "deploy <broadsea-application-name> --branch <environment-branch>",
 	Short: "Deploys a OHDSI Applications",
 	Long:  `Deploys a OHDSI Applications (WebAPI, Atlas, ETL-Synthea, and Achilles)`,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		return Deploy(broadsea_app)
+		var app = "broadsea-app"
+
+		if len(args) > 0 {
+			app = args[0]
+		}
+		return Deploy(app)
 	},
 }
 
 func init() {
-	deployCmd.PersistentFlags().BoolP("webtools", "w", false, "Deploy Broadsea Webtools to environment")
-	deployCmd.PersistentFlags().BoolP("methods", "m", false, "Deploy Broadsea Methods Library to environment")
+	deployCmd.Flags().StringVar(&branch, "b", "main", "Environment branch name for pipeline to deploy on")
 	rootCmd.AddCommand(deployCmd)
 }

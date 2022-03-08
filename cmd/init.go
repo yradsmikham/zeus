@@ -20,7 +20,7 @@ func Init(environment string, organization string, project string) (err error) {
 		if err != nil {
 			return err
 		}
-		log.Info("Using %s: %s", tool, path)
+		log.Info("Using: " + tool + " from " + path)
 	}
 
 	if error := installAzDevOpsExt(); error != nil {
@@ -32,7 +32,11 @@ func Init(environment string, organization string, project string) (err error) {
 	if error := azLogin(organization, project); error != nil {
 		return error
 	}
-	log.Info("Azure DevOps defaults configured.")
+
+	if error := checkPipelines(); error != nil {
+		return error
+	}
+
 	return err
 }
 
@@ -53,25 +57,24 @@ func azLogin(organization string, project string) (err error) {
 		log.Error("%s: %s", err, output)
 		return err
 	}
+	log.Info("Azure DevOps defaults configured.")
 	log.Info("Successfully logged into Azure DevOps.")
 	return err
 }
 
 // Verify if required pipelines already exist in Azure DevOps sub
 func checkPipelines() (err error) {
-	pipelines := []string{"Broadsea Build", "Broadsea Methods Release", "Broadsea WebTools Release"}
+	pipelines := []string{"Vocabulary Build, Vocabulary Release, Broadsea Build", "Broadsea WebTools Release", "Broadsea Methods Release"}
 	for i, pipeline := range pipelines {
-		fmt.Println(i, pipeline)
+		num := i + 1
+		log.Info("Verifying pipelines: ", num, " ", pipeline)
 		output, err := exec.Command("az", "pipelines", "list", "--name", pipeline).CombinedOutput()
-		log.Info(output)
-
 		if len(output) == 0 {
 			fmt.Println(pipeline + " does not exist. Importing new pipeline.")
 			if error := importPipelines(pipeline); error != nil {
 				return error
 			}
 		}
-
 		if err != nil {
 			log.Error("There was an error validating pipeline " + pipeline)
 			log.Error(" %s: %s", err, output)
@@ -82,7 +85,7 @@ func checkPipelines() (err error) {
 
 // Import required pipelines if they do not exists
 func importPipelines(pipeline string) (err error) {
-	cmd := exec.Command("az", "pipelines", "create", "--name", pipeline, "--description", "pipeline created by Zeus", "--repository", "https://dev.azure.com/US-HLS-AppInnovations/_git/OHDSIonAzure", "--branch", "main")
+	cmd := exec.Command("az", "pipelines", "create", "--name", pipeline, "--description", "pipeline created by Zeus", "--repository", "https://dev.azure.com/US-HLS-AppInnovations/_git/OHDSIonAzure", "--branch", "main", "--yml-path", "azure-pipelines.yml", "--repository-type", "tfsgit")
 	if output, err := cmd.CombinedOutput(); err != nil {
 		log.Error("%s: %s", err, output)
 		return err

@@ -8,8 +8,8 @@ import (
 
 // ExecuteBroadseaBuild function will run azdo pipeline to build Broadsea docker images
 func ExecuteBroadseaBuild() (err error) {
+	log.Info("Queuing run for Broadsea Build pipeline")
 	cmd := exec.Command("az", "pipelines", "run", "--name", "Broadsea Build")
-
 	if output, err := cmd.CombinedOutput(); err != nil {
 		log.Error("%s: %s", err, output)
 		return err
@@ -19,13 +19,30 @@ func ExecuteBroadseaBuild() (err error) {
 }
 
 // ExecuteBroadseaRelease function will run azdo pipeline to deploy Broadsea to app services
-func ExecuteBroadseaRelease() (err error) {
+func ExecuteBroadseaWebToolsRelease() (err error) {
+	log.Info("Queuing run for Broadsea WebTools Release pipeline")
 	cmd := exec.Command("az", "pipelines", "run", "--name", "Broadsea WebTools Release")
 
 	if output, err := cmd.CombinedOutput(); err != nil {
 		log.Error("%s: %s", err, output)
 		return err
 	}
-	log.Info("Broadsea release pipeline executed!")
+	log.Info("Broadsea Webtools release pipeline executed!")
+
+	return err
+}
+
+// ExecuteBroadseaRelease function will run azdo pipeline to deploy Broadsea to app services
+func ExecuteBroadseaMethodsRelease() (err error) {
+
+	log.Info("Queuing run for Broadsea Methods Release pipeline")
+	cmd := exec.Command("az", "pipelines", "run", "--name", "Broadsea Methods Release")
+
+	if output, err := cmd.CombinedOutput(); err != nil {
+		log.Error("%s: %s", err, output)
+		return err
+	}
+	log.Info("Broadsea Methods release pipeline executed!")
+
 	return err
 }
