@@ -46,3 +46,32 @@ func ExecuteBroadseaMethodsRelease() (err error) {
 
 	return err
 }
+
+// Execute function will run azdo pipeline to deploy Broadsea to app services
+func ExecuteVocabBuild() (err error) {
+
+	log.Info("Queuing run for Vocabulary Build pipeline")
+	cmd := exec.Command("az", "pipelines", "run", "--name", "Vocabulary Build")
+
+	if output, err := cmd.CombinedOutput(); err != nil {
+		log.Error("%s: %s", err, output)
+		return err
+	}
+	log.Info("Vocabulary build pipeline executed!")
+
+	return err
+}
+
+func ExecuteVocabRelease() (err error) {
+
+	log.Info("Queuing run for Vocabulary Release pipeline")
+	cmd := exec.Command("az", "pipelines", "run", "--name", "Vocabulary Release")
+
+	if output, err := cmd.CombinedOutput(); err != nil {
+		log.Error("%s: %s", err, output)
+		return err
+	}
+	log.Info("Vocabulary release pipeline executed!")
+
+	return err
+}

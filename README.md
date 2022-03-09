@@ -27,9 +27,11 @@ zeus init --env dev --org https://dev.azure.com/<organization> --proj <project>
 - Importing vocabulary files to Storage Account and inserting them into CDM:
 
 ```
-zeus vocab upload --path /path/to/vocab/files --storage-account name-of-storage-account
+zeus vocab upload --account-name <storage-account-name> --account-key <storage-account-key> --container <container-name> --path </path/to/vocab/files>
 zeus vocab import --env dev
 ```
+
+![zeus vocab](./docs/zeus_vocab.gif)
 
 - Deploy OHDSI applications to environments
 

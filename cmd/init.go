@@ -64,7 +64,7 @@ func azLogin(organization string, project string) (err error) {
 
 // Verify if required pipelines already exist in Azure DevOps sub
 func checkPipelines() (err error) {
-	pipelines := []string{"Broadsea Build", "Broadsea WebTools Release", "Broadsea Methods Release"}
+	pipelines := []string{"Vocabulary Build", "Vocabulary Release", "Broadsea Build", "Broadsea WebTools Release", "Broadsea Methods Release"}
 	for i, pipeline := range pipelines {
 		num := i + 1
 		log.Info("Verifying pipelines: ", num, " ", pipeline)
@@ -83,7 +83,7 @@ func checkPipelines() (err error) {
 	return err
 }
 
-// Import required pipelines if they do not exists
+// TO-DO: Import required pipelines if they do not exists
 func importPipelines(pipeline string) (err error) {
 	cmd := exec.Command("az", "pipelines", "create", "--name", pipeline, "--description", "pipeline created by Zeus", "--repository", "https://dev.azure.com/US-HLS-AppInnovations/_git/OHDSIonAzure", "--branch", "main", "--yml-path", "azure-pipelines.yml", "--repository-type", "tfsgit")
 	if output, err := cmd.CombinedOutput(); err != nil {
