@@ -2,10 +2,14 @@ package cmd
 
 import (
 	"context"
+	"flag"
+	"math/rand"
 	"os"
 	"os/exec"
 	"reflect"
+	"time"
 
+	petname "github.com/dustinkirkland/golang-petname"
 	"github.com/kyokomi/emoji"
 	"github.com/microsoft/azure-devops-go-api/azuredevops"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/pipelinepermissions"
@@ -26,13 +30,18 @@ var AZURE_DEVOPS_EXT_GITHUB_PAT string
 var AZURE_DEVOPS_EXT_PAT string
 
 var pipeline_mapping = map[string]string{
-	"Broadsea Build":            "broadsea_build_pipeline",
-	"Broadsea Methods Release":  "broadsea_methods_release_pipeline",
-	"Broadsea WebTools Release": "broadsea_webtools_release_pipeline",
-	"Vocabulary Build":          "vocabulary_build_pipeline",
-	"Vocabulary Release":        "vocabulary_release_pipeline",
-	"Yvonne Test Pipeline":      "broadsea_build_pipeline",
+	"Broadsea Build Pipeline":   "broadsea_build_pipeline",
+	"Broadsea Release Pipeline": "broadsea_webtools_release_pipeline",
+	//"Broadsea Methods Release": "broadsea_methods_release_pipeline",
+	"Vocabulary Build Pipeline":   "vocabulary_build_pipeline",
+	"Vocabulary Release Pipeline": "vocabulary_release_pipeline",
+	"Yvonne Test Pipeline":        "broadsea_build_pipeline",
 }
+
+var (
+	words     = flag.Int("words", 2, "The number of words in the pet name")
+	separator = flag.String("separator", "-", "The separator between words in the pet name")
+)
 
 // Init function initializes the configuration for a given environment
 func Init(environment string, organization string, project string) (err error) {
@@ -51,15 +60,6 @@ func Init(environment string, organization string, project string) (err error) {
 
 	}
 	log.Info(emoji.Sprint("Azure DevOps Extension is installed :white_check_mark:"))
-
-	/*if error := azLogin(organization, project); error != nil {
-		return error
-	}
-
-	// Validate OHDSI Application pipelines exists
-	if error := checkPipelines(); error != nil {
-		return error
-	} */
 
 	return err
 }
@@ -89,34 +89,12 @@ func installAzDevOpsExt() (err error) {
 	return err
 }
 
-// TODO: Check to see if a service connection exists for Github
-// Challenging because will require parsing JSON output
-/*func checkServiceConnection() (err error) {
-	cmd := exec.Command("az", "devops", "service-endpoint", "list")
-	if output, err := cmd.CombinedOutput(); err != nil {
-		log.Error("Unable to list service connections.")
-		log.Error("%s: %s", err, output)
-		return err
-	}
-	return err
-}
-
-// TO-DO: Create Service Connection between AzureDevops and GitHub
-// Return Service Connection ID
-func createServiceConnectionGithub() (id string, err error) {
-	log.Info("Checking for Github Service Connection...")
-	cmd := exec.Command("az", "devops", "service-endpoint", "github", "create", "--name", "github_service_connection_zeus", "--github-url", "https://github.com")
-	if output, err := cmd.CombinedOutput(); err != nil {
-		log.Error("%s: %s", err, string(output))
-		return "Unable to create Service Connection. Please try again.", err
-	} else {
-		log.Info(string(output))
-	}
-	// Needs to return the service connection ID
-	return "", err
-} */
-
 func createServiceEndpoint(ctx context.Context, connection *azuredevops.Connection, project string) (svc_con_id string, err error) {
+	rand.Seed(time.Now().UTC().UnixNano())
+	flag.Parse()
+	rand.Seed(time.Now().UnixNano())
+	rand := petname.Generate(*words, *separator)
+
 	client, err := serviceendpoint.NewClient(ctx, connection)
 	if err != nil {
 		log.Error("Unable to connect to Azure DevOps.")
@@ -138,7 +116,8 @@ func createServiceEndpoint(ctx context.Context, connection *azuredevops.Connecti
 		Type:                new(string),
 		Url:                 new(string),
 	}
-	*endpoint.Name = "zeus-svc-con"
+
+	*endpoint.Name = "zeus-svc-con-" + rand
 	*endpoint.Type = "Github"
 	*endpoint.Url = "https://github.com"
 	auth := serviceendpoint.EndpointAuthorization{
@@ -170,17 +149,6 @@ func createServiceEndpoint(ctx context.Context, connection *azuredevops.Connecti
 	uuid := *responseValue.Id
 	return uuid.String(), err
 }
-
-/* // Update Service Connection to enable for pipelines
-func updateServiceConnection(id string) (err error) {
-	log.Info("Updating Service Connection...")
-	cmd := exec.Command("az", "devops", "service-endpoint", "update", "--id", id, "--enable-for-all", "true")
-	if output, err := cmd.CombinedOutput(); err != nil {
-		log.Error("%s: %s", err, string(output))
-		return err
-	}
-	return err
-} */
 
 func updateServiceEndpoint(id string, ctx context.Context, connection *azuredevops.Connection, project string) (err error) {
 	log.Info("Attempting to update Service Endpoint: ", id)
@@ -236,41 +204,6 @@ func updateServiceEndpoint(id string, ctx context.Context, connection *azuredevo
 	return err
 
 }
-
-/*// Configure organization and project for Azure DevOps
-func azLogin(organization string, project string) (err error) {
-	cmd := exec.Command("az", "devops", "configure", "--defaults", "organization="+organization, "project="+project)
-	if output, err := cmd.CombinedOutput(); err != nil {
-		log.Error("%s: %s", err, output)
-		return err
-	}
-	log.Info("Azure DevOps defaults configured.")
-	log.Info("Successfully logged into Azure DevOps.")
-	return err
-}
-
-// Verify if required pipelines already exist in Azure DevOps sub
-func checkPipelines() (err error) {
-	//pipelines := []string{"Broadsea Build", "Broadsea Methods Release", "Broadsea WebTools Release", "Vocabulary Build", "Vocabulary Release", "Yvonne Test Pipeline"}
-	pipelines := []string{"Broadsea Build Pipeline", "Yvonne Test Pipeline"}
-	for _, pipeline := range pipelines {
-		log.Info("Verifying pipelines: ", pipeline)
-		output, err := exec.Command("az", "pipelines", "list", "--name", pipeline).CombinedOutput()
-		if len(output) == 3 {
-			fmt.Println(pipeline + " does not exist. Importing new pipeline.")
-			if error := importPipelines(pipeline, pipeline_mapping[pipeline]); error != nil {
-				return error
-			}
-		} else {
-			log.Info(pipeline, " validated")
-		}
-		if err != nil {
-			log.Error("There was an error validating pipeline " + pipeline)
-			log.Error(" %s: %s", err, output)
-		}
-	}
-	return err
-} */
 
 func pipelineExists(arrayType interface{}, item interface{}) bool {
 	arr := reflect.ValueOf(arrayType)
@@ -332,14 +265,15 @@ func verifyPipelines(ctx context.Context, connection *azuredevops.Connection, pr
 		} else {
 			log.Warning(emoji.Sprintf("%v :x:", pipes))
 			log.Info("Attempting to import pipeline...")
+			createPipeline(pipes, pipeline_mapping[pipes])
 		}
 	}
 
 	return err
 }
 
-// TO-DO: Import required pipelines if they do not exists
-func importPipelines(pipeline string, yaml_name string) (err error) {
+// Import required pipelines if they do not exists
+func createPipeline(pipeline string, yaml_name string) (err error) {
 	yaml_path := "pipelines/" + yaml_name + ".yaml"
 	log.Info("Importing pipeline yaml: ", yaml_path)
 	cmd := exec.Command("az", "pipelines", "create", "--name", pipeline, "--description", "This pipeline was created by Zeus", "--repository", "https://github.com/yradsmikham/OHDSIonAzure", "--branch", "master", "--yaml-path", yaml_path, "--repository-type", "github", "--service-connection", "8b78bfd2-ad49-449f-b220-b329efd6f601")
@@ -349,6 +283,43 @@ func importPipelines(pipeline string, yaml_name string) (err error) {
 	}
 	return err
 }
+
+// CURRENTLY UNSUPPORTED: https://github.com/microsoft/azure-devops-go-api/issues/79
+/*func createPipeline(ctx context.Context, connection *azuredevops.Connection, project string, pipelineName string) (err error) {
+	client := pipelines.NewClient(ctx, connection)
+	if err != nil {
+		log.Error("Unable to connect to Azure DevOps.")
+		log.Fatal(err)
+	}
+
+	configurationType := pipelines.ConfigurationType("yaml")
+	createPipelineConfigurationParameters := pipelines.CreatePipelineConfigurationParameters{
+		Type: &configurationType,
+		Path: ,
+		Repository: ,
+
+	}
+
+	createPipelineParameters := pipelines.CreatePipelineParameters{
+		Configuration: &createPipelineConfigurationParameters,
+		//Folder:        new(string),
+		Name: new(string),
+	}
+	*createPipelineParameters.Name = pipelineName
+
+	createPipelinesArgs := pipelines.CreatePipelineArgs{
+		InputParameters: &createPipelineParameters,
+		Project:         &project,
+	}
+
+	responseValue, err := client.CreatePipeline(ctx, createPipelinesArgs)
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		log.Info(*responseValue.Name + " created successfully")
+	}
+	return err
+} */
 
 var initCmd = &cobra.Command{
 	Use:   "init [--env environment]",

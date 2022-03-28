@@ -3,6 +3,7 @@ module zeus
 go 1.15
 
 require (
+	github.com/dustinkirkland/golang-petname v0.0.0-20191129215211-8e5a1ed0cff0
 	github.com/google/uuid v1.1.2
 	github.com/kyokomi/emoji v2.2.4+incompatible
 	github.com/microsoft/azure-devops-go-api/azuredevops v1.0.0-b5
