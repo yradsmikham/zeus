@@ -2,10 +2,11 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/exec"
+	"reflect"
 
+	"github.com/kyokomi/emoji"
 	"github.com/microsoft/azure-devops-go-api/azuredevops"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/pipelinepermissions"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/pipelines"
@@ -35,29 +36,30 @@ var pipeline_mapping = map[string]string{
 
 // Init function initializes the configuration for a given environment
 func Init(environment string, organization string, project string) (err error) {
+	log.Info("Confirming prerequisites are installed: ")
 	requiredSystemTools := []string{"git", "terraform", "az"}
 	for _, tool := range requiredSystemTools {
 		path, err := exec.LookPath(tool)
 		if err != nil {
 			return err
 		}
-		log.Info("Using: " + tool + " from " + path)
+		log.Info(emoji.Sprint("Using: " + tool + " from " + path + " :white_check_mark:"))
 	}
 
 	if error := installAzDevOpsExt(); error != nil {
 		return error
 
 	}
-	log.Info("Azure DevOps Extension is installed.")
+	log.Info(emoji.Sprint("Azure DevOps Extension is installed :white_check_mark:"))
 
 	/*if error := azLogin(organization, project); error != nil {
 		return error
-	}*/
+	}
 
 	// Validate OHDSI Application pipelines exists
 	if error := checkPipelines(); error != nil {
 		return error
-	}
+	} */
 
 	return err
 }
@@ -119,8 +121,6 @@ func createServiceEndpoint(ctx context.Context, connection *azuredevops.Connecti
 	if err != nil {
 		log.Error("Unable to connect to Azure DevOps.")
 		log.Fatal(err)
-	} else {
-		log.Info("Successfully Connected to Azure DevOps!")
 	}
 
 	endpoint := serviceendpoint.ServiceEndpoint{
@@ -188,8 +188,6 @@ func updateServiceEndpoint(id string, ctx context.Context, connection *azuredevo
 	if err != nil {
 		log.Error("Unable to connect to Azure DevOps.")
 		log.Fatal(err)
-	} else {
-		log.Info("Successfully Connected to Azure DevOps!")
 	}
 
 	permission := pipelinepermissions.Permission{
@@ -249,7 +247,7 @@ func azLogin(organization string, project string) (err error) {
 	log.Info("Azure DevOps defaults configured.")
 	log.Info("Successfully logged into Azure DevOps.")
 	return err
-} */
+}
 
 // Verify if required pipelines already exist in Azure DevOps sub
 func checkPipelines() (err error) {
@@ -272,17 +270,28 @@ func checkPipelines() (err error) {
 		}
 	}
 	return err
+} */
+
+func pipelineExists(arrayType interface{}, item interface{}) bool {
+	arr := reflect.ValueOf(arrayType)
+
+	for i := 0; i < arr.Len(); i++ {
+		if arr.Index(i).Interface() == item {
+			return true
+		}
+	}
+
+	return false
 }
 
 func verifyPipelines(ctx context.Context, connection *azuredevops.Connection, project string) (err error) {
-	//pipelinesList := []string{"Broadsea Build Pipeline", "Yvonne Test Pipeline"}
-	log.Info("Verifying OHDSI pipelines")
+	ohdsiPipelinesList := []string{"Broadsea Build Pipeline", "Broadsea Release Pipeline", "Vocabulary Build Pipeline", "Vocabulary Release Pipeline", "Yvonne Test Pipeline"}
+	pipelinesList := []string{}
+	log.Info("Verifying OHDSI Pipelines:")
 	client := pipelines.NewClient(ctx, connection)
 	if err != nil {
 		log.Error("Unable to connect to Azure DevOps.")
 		log.Fatal(err)
-	} else {
-		log.Info("Successfully Connected to Azure DevOps!")
 	}
 
 	listPipelinesArgs := pipelines.ListPipelinesArgs{
@@ -297,10 +306,32 @@ func verifyPipelines(ctx context.Context, connection *azuredevops.Connection, pr
 
 	index := 0
 	for responseValue != nil {
-		// Log the page of team project names
+		// List all existing pipelines
 		for _, pipes := range (*responseValue).Value {
-			log.Printf("Name[%v] = %v", index, *pipes.Name)
+			pipelinesList = append(pipelinesList, *pipes.Name)
 			index++
+		}
+		// if continuationToken has a value, then there is at least one more page of pipelines to get
+		if responseValue.ContinuationToken != "" {
+			// Get next page of pipelines
+			pipelineArgs := pipelines.ListPipelinesArgs{
+				ContinuationToken: &responseValue.ContinuationToken,
+			}
+			responseValue, err = client.ListPipelines(ctx, pipelineArgs)
+			if err != nil {
+				log.Fatal(err)
+			}
+		} else {
+			responseValue = nil
+		}
+	}
+
+	for _, pipes := range ohdsiPipelinesList {
+		if pipelineExists(pipelinesList, pipes) {
+			log.Info(emoji.Sprintf("%v :white_check_mark:", pipes))
+		} else {
+			log.Warning(emoji.Sprintf("%v :x:", pipes))
+			log.Info("Attempting to import pipeline...")
 		}
 	}
 
