@@ -8,25 +8,72 @@ import (
 
 var branch string
 
+var pipelineNames = map[string]string{
+	"broadsea-build":   "Broadsea Build Pipeline",
+	"broadsea-release": "Broadsea Release Pipeline",
+	"vocab-build":      "Vocabulary Build Pipeline",
+	"vocab-release":    "Vocabulary Release Pipeline",
+	"achilles-build":   "Achilles Build",
+	"achilles-release": "Achilles Release",
+}
+
 // Initializes the configuration for the given environment
 func Deploy(app string) (err error) {
-	if app == "broadsea-webtools" {
+	if app == "broadsea" {
 		// Execute Azure DevOps build pipeline to build Broadsea Docker images
-		if error := util.ExecuteBroadseaBuild(); error != nil {
+		if error := util.ExecPipeline(pipelineNames["broadsea-build"]); error != nil {
 			return error
 		}
-		// Execute Azure DevOps build pipeline to deploy broadsea-webtools docker image
-		if error := util.ExecuteBroadseaWebToolsRelease(); error != nil {
+		// Execute Azure DevOps build pipeline to deploy Broadsea docker image
+		if error := util.ExecPipeline(pipelineNames["broadsea-release"]); error != nil {
 			return error
 		}
-	}
-	if app == "broadsea-methods" {
-		// Execute Azure DevOps build pipeline to build Broadsea Docker images
-		if error := util.ExecuteBroadseaBuild(); error != nil {
+	} else if app == "vocab" {
+		// Execute Azure DevOps build pipeline to build vocabulary dacpac
+		if error := util.ExecPipeline(pipelineNames["vocab-build"]); error != nil {
 			return error
 		}
-		// Execute Azure DevOps build pipeline to deploy broadsea-methods docker image
-		if error := util.ExecuteBroadseaMethodsRelease(); error != nil {
+		// Execute Azure DevOps build pipeline to deploy vocabulary dacpac
+		if error := util.ExecPipeline(pipelineNames["vocab-release"]); error != nil {
+			return error
+		}
+	} else if app == "achilles" {
+		// Execute Azure DevOps build pipeline for Achilles-Synthea-ETL Docker image
+		if error := util.ExecPipeline(pipelineNames["achilles-build"]); error != nil {
+			return error
+		}
+		// Execute Azure DevOps build pipeline to deploy Achilles-Synthea-ETL Docker image
+		if error := util.ExecPipeline(pipelineNames["achilles-release"]); error != nil {
+			return error
+		}
+	} else if app == "broadsea-build" {
+		// Execute Azure DevOps build pipeline to build Broadsea Docker image
+		if error := util.ExecPipeline(pipelineNames["broadsea-build"]); error != nil {
+			return error
+		}
+	} else if app == "broadsea-release" {
+		// Execute Azure DevOps build pipeline to deploy Broadsea Docker image
+		if error := util.ExecPipeline(pipelineNames["broadsea-release"]); error != nil {
+			return error
+		}
+	} else if app == "vocab-build" {
+		// Execute Azure DevOps build pipeline to build vocabulary dacpac
+		if error := util.ExecPipeline(pipelineNames["vocab-build"]); error != nil {
+			return error
+		}
+	} else if app == "vocab-release" {
+		// Execute Azure DevOps build pipeline to deploy vocabulary dacpac
+		if error := util.ExecPipeline(pipelineNames["vocab-release"]); error != nil {
+			return error
+		}
+	} else if app == "achilles-build" {
+		// Execute Azure DevOps build pipeline to build Achilles-Synthea-ETL Docker image
+		if error := util.ExecPipeline(pipelineNames["achilles-build"]); error != nil {
+			return error
+		}
+	} else if app == "achilles-release" {
+		// Execute Azure DevOps build pipeline to deploy Achilles-Synthea-ETL Docker image
+		if error := util.ExecPipeline(pipelineNames["achilles-release"]); error != nil {
 			return error
 		}
 	}

@@ -43,7 +43,7 @@ func uploadVocab(account_name string, account_key string, container string, voca
 func importVocab(env string) (err error) {
 	// TODO: Not using "env"
 	// TODO: Need to execute Vocabulary Release pipeline as well
-	if error := util.ExecuteVocabBuild(); error != nil {
+	if error := util.ExecPipeline("vocab-release"); error != nil {
 		return error
 	}
 
