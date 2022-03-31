@@ -28,6 +28,8 @@ var project string
 var service_connection_id string
 var AZURE_DEVOPS_EXT_GITHUB_PAT string
 var AZURE_DEVOPS_EXT_PAT string
+var AZURE_DEVOPS_ORGANIZATION string
+var AZURE_DEVOPS_PROJECT string
 
 var pipeline_mapping = map[string]string{
 	"Broadsea Build Pipeline":   "broadsea_build_pipeline",
@@ -326,34 +328,50 @@ var initCmd = &cobra.Command{
 	Use:   "init [--env environment]",
 	Short: "Initializes an OHDSI CDM instance",
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
+
+		var organizationUrl string
+		var projectName string
+
+		// Verify that environment variables are set
+		verifyEnvVariables("AZURE_DEVOPS_EXT_PAT")
+		verifyEnvVariables("AZURE_DEVOPS_EXT_GITHUB_PAT")
+		personalAccessToken := os.Getenv("AZURE_DEVOPS_EXT_PAT")
+
+		if cmd.Flags().Changed("org") {
+			organizationUrl = organization
+		} else {
+			verifyEnvVariables("AZURE_DEVOPS_ORGANIZATION")
+			organizationUrl = os.Getenv("AZURE_DEVOPS_ORGANIZATION")
+		}
+
+		// Create a connection to your organization
+		connection := azuredevops.NewPatConnection(organizationUrl, personalAccessToken)
+		ctx := context.Background()
+
+		if cmd.Flags().Changed("proj") {
+			projectName = project
+		} else {
+			verifyEnvVariables("AZURE_DEVOPS_PROJECT")
+			projectName = os.Getenv("AZURE_DEVOPS_PROJECT")
+		}
+
 		if cmd.Flags().Changed("service-connection-id") {
 			// Go straight to checking pipelines
 			log.Info("Proceeding to use provided service connection.")
 		} else {
-			// Verify that environment variables are set
-			verifyEnvVariables("AZURE_DEVOPS_EXT_PAT")
-			verifyEnvVariables("AZURE_DEVOPS_EXT_GITHUB_PAT")
-
-			// Define variables to log in Azure DevOps
-			organizationUrl := organization
-			personalAccessToken := os.Getenv("AZURE_DEVOPS_EXT_PAT") // todo: replace value with your PAT
-
-			// Create a connection to your organization
-			connection := azuredevops.NewPatConnection(organizationUrl, personalAccessToken)
-			ctx := context.Background()
-
 			// Create Service Connection
-			if id, error := createServiceEndpoint(ctx, connection, project); error != nil {
+			if id, error := createServiceEndpoint(ctx, connection, projectName); error != nil {
 				return error
 			} else {
-				updateServiceEndpoint(id, ctx, connection, project)
+				updateServiceEndpoint(id, ctx, connection, projectName)
 			}
 
-			if error := verifyPipelines(ctx, connection, project); error != nil {
-				return error
-			}
 		}
-		return Init(environment, organization, project)
+		// Verify Pipelines
+		if error := verifyPipelines(ctx, connection, projectName); error != nil {
+			return error
+		}
+		return Init(environment, organization, projectName)
 	},
 }
 
@@ -362,8 +380,8 @@ func init() {
 	initCmd.Flags().StringVar(&organization, "org", "", "Azure DevOps organization (URL)")
 	initCmd.Flags().StringVar(&project, "proj", "", "Azure DevOps project name")
 	initCmd.Flags().StringVar(&service_connection_id, "service-connection-id", "", "Service Connection for Github")
-	if error := initCmd.MarkFlagRequired("env"); error != nil {
+	/*if error := initCmd.MarkFlagRequired("env"); error != nil {
 		return
-	}
+	}*/
 	rootCmd.AddCommand(initCmd)
 }
