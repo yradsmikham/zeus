@@ -126,7 +126,7 @@ func createServiceEndpoint(ctx context.Context, connection *azuredevops.Connecti
 	}
 
 	auth.Parameters = &map[string]string{
-		"apitoken": os.Getenv(AZURE_DEVOPS_EXT_PAT),
+		"apitoken": os.Getenv(AZURE_DEVOPS_EXT_GITHUB_PAT),
 	}
 	*auth.Scheme = "Token"
 	*endpoint.Authorization = auth
@@ -205,7 +205,7 @@ func updateServiceEndpoint(id string, ctx context.Context, connection *azuredevo
 
 }
 
-func pipelineExists(arrayType interface{}, item interface{}) bool {
+func PipelineExists(arrayType interface{}, item interface{}) bool {
 	arr := reflect.ValueOf(arrayType)
 
 	for i := 0; i < arr.Len(); i++ {
@@ -260,8 +260,9 @@ func verifyPipelines(ctx context.Context, connection *azuredevops.Connection, pr
 	}
 
 	for _, pipes := range ohdsiPipelinesList {
-		if pipelineExists(pipelinesList, pipes) {
+		if PipelineExists(pipelinesList, pipes) {
 			log.Info(emoji.Sprintf("%v :white_check_mark:", pipes))
+			return
 		} else {
 			log.Warning(emoji.Sprintf("%v :x:", pipes))
 			log.Info("Attempting to import pipeline...")

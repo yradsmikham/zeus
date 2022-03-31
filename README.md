@@ -13,6 +13,10 @@ The objective of this project is to significantly reduce the time and cost for d
 az login
 az account set --subscription <subscription-id>
 ```
+3. Set environment variables:
+
+AZURE_DEVOPS_EXT_PAT: Personal Access Token created in Azure DevOps
+AZURE_DEVOPS_EXT_GITHUB_PAT: Personal Access Token Created in Github with recommended scopes -- repo, user, admin:repo_hook
 
 ### Common Commands:
 

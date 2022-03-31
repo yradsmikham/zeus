@@ -1,13 +1,14 @@
 package cmd
 
+/*
+
 import (
 	"os/exec"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-
-	"zeus/util"
 )
+
 
 var account_name string
 var account_key string
@@ -15,7 +16,7 @@ var container string
 var path string
 
 // Uploads vocabulary files to Storage Account
-/*func Vocab(operation string) (err error) {
+func Vocab(operation string) (err error) {
 	log.Info("Attempting to", operation, "vocabulary files")
 	if operation == "upload" {
 		if error := uploadVocab(pipeline); error != nil {
@@ -27,7 +28,7 @@ var path string
 		// Execute vocab build and release pipeline
 	}
 	return err
-}*/
+}
 
 func uploadVocab(account_name string, account_key string, container string, vocab_path string) (err error) {
 	cmd := exec.Command("az", "storage", "blob", "upload-batch", "--account-name", account_name, "--account-key", account_key, "--destination", container, "--source", vocab_path, "--pattern", "*.csv")
@@ -101,3 +102,5 @@ func init() {
 
 	rootCmd.AddCommand(vocabCmd)
 }
+
+*/
