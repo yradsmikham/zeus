@@ -19,6 +19,12 @@ func ExecPipeline(ctx context.Context, connection *azuredevops.Connection, app s
 		log.Fatal(err)
 	}
 
+	buildRepository := build.BuildRepository{
+		DefaultBranch: new(string),
+	}
+
+	*buildRepository.DefaultBranch = "main"
+
 	definition := build.DefinitionReference{
 		Id: new(int),
 	}
@@ -26,6 +32,7 @@ func ExecPipeline(ctx context.Context, connection *azuredevops.Connection, app s
 
 	buildParameters := build.Build{
 		Definition: &definition,
+		Repository: &buildRepository,
 	}
 
 	queueBuildArgs := build.QueueBuildArgs{

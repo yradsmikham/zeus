@@ -264,7 +264,6 @@ func verifyPipelines(ctx context.Context, connection *azuredevops.Connection, pr
 	for _, pipes := range ohdsiPipelinesList {
 		if PipelineExists(pipelinesList, pipes) {
 			log.Info(emoji.Sprintf("%v :white_check_mark:", pipes))
-			return
 		} else {
 			log.Warning(emoji.Sprintf("%v :x:", pipes))
 			log.Info("Attempting to import pipeline...")

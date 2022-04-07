@@ -77,12 +77,14 @@ func Infra(operation string, envName string) (err error) {
 		fmt.Println(tfFile.Name)
 		// download file name: curl -OL https://raw.githubusercontent.com/yradsmikham/OHDSIonAzure/main/infra/terraform/bootstrap/main.tf
 		// curl -OL https://raw.githubusercontent.com/yradsmikham/OHDSIonAzure/main/infra/terraform/bootstrap/main.tf
-
+		log.Info("Curling File from Repo: " + bootstrapGitDir + "/" + tfFile.Name)
 		resp, err := http.Get(bootstrapGitDir + "/" + tfFile.Name)
 		if err != nil {
 			log.Fatal(err)
 		}
 		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		fmt.Println(string(body))
 	}
 
 	return (err)
