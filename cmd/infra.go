@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -49,16 +50,28 @@ type Response []struct {
 */
 
 func Infra(operation string, envName string) (err error) {
-	bootstrapGitDir := "https://api.github.com/repos/yradsmikham/OHDSIonAzure/contents/infra/terraform/bootstrap"
+	bootstrapGitApi := "https://api.github.com/repos/yradsmikham/OHDSIonAzure/contents/infra/terraform/bootstrap"
+	bootstrapGitRaw := "https://raw.githubusercontent.com/yradsmikham/OHDSIonAzure/master/infra/terraform/bootstrap/"
+	bootstrapDir := envName + "/" + envName + "-bootstrap"
+	cdmGitApi := "https://api.github.com/repos/yradsmikham/OHDSIonAzure/contents/infra/terraform/omop"
+	cdmGitRaw := "https://raw.githubusercontent.com/yradsmikham/OHDSIonAzure/master/infra/terraform/omop/"
+	cdmDir := envName + "/" + envName + "-cdm"
+
 	// Create Bootstrap directory and OHDSI CDM env directory
 	if operation == "create" {
 		log.Info("Creating directory ", envName)
-		os.MkdirAll(envName+"/"+envName+"-bootstrap", 0755)
-		os.MkdirAll(envName+"/"+envName+"-cdm", 0755)
+		os.MkdirAll(bootstrapDir, 0755)
+		os.MkdirAll(cdmDir, 0755)
 	}
+	curlTfFiles(bootstrapGitApi, bootstrapGitRaw, bootstrapDir)
+	curlTfFiles(cdmGitApi, cdmGitRaw, cdmDir)
+	return (err)
+}
+
+func curlTfFiles(apiUrl string, rawUrl string, dir string) (err error) {
 	// Copy TF files over to each directory
 	// curl -X GET https://api.github.com/repos/yradsmikham/OHDSIonAzure/contents/infra/terraform/bootstrap
-	resp, err := http.Get(bootstrapGitDir)
+	resp, err := http.Get(apiUrl)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -70,24 +83,17 @@ func Infra(operation string, envName string) (err error) {
 		fmt.Println("Can not unmarshal JSON")
 	}
 
-	// fmt.Println(PrettyPrint(result))
-
 	// Loop through the data node for the FirstName
 	for _, tfFile := range result {
 		fmt.Println(tfFile.Name)
-		// download file name: curl -OL https://raw.githubusercontent.com/yradsmikham/OHDSIonAzure/main/infra/terraform/bootstrap/main.tf
-		// curl -OL https://raw.githubusercontent.com/yradsmikham/OHDSIonAzure/main/infra/terraform/bootstrap/main.tf
-		log.Info("Curling File from Repo: " + bootstrapGitDir + "/" + tfFile.Name)
-		resp, err := http.Get(bootstrapGitDir + "/" + tfFile.Name)
-		if err != nil {
-			log.Fatal(err)
+		log.Info("Curling File from Repo: " + rawUrl + tfFile.Name)
+		cmd := exec.Command("curl", "--output-dir", dir, "-OL", rawUrl+tfFile.Name)
+		if output, err := cmd.CombinedOutput(); err != nil {
+			log.Error("%s: %s", err, output)
+			return err
 		}
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
-		fmt.Println(string(body))
 	}
-
-	return (err)
+	return err
 }
 
 var infraCmd = &cobra.Command{

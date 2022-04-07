@@ -1,48 +1,65 @@
-# Zeus - A CLI for OHDSI on Azure
+# Introduction
 
-Welcome to Zeus!
+The goal of this project is to ease running OHDSI projects in Azure.
 
-The objective of this project is to significantly reduce the time and cost for deploying an instance of OHDSI CDM on Azure. Zeus is a command line interface (CLI) that allows for easy deployment and management of OHDSI CDM resources in Azure.
+Some of the OHDSI projects include:
 
-## Prerequisites
+* [Common Data Model (CDM)](https://github.com/OHDSI/CommonDataModel), including [Vocabulary](https://github.com/OHDSI/Vocabulary-v5.0)
+* [Atlas](https://github.com/OHDSI/Atlas)
+* [WebApi](https://github.com/OHDSI/WebAPI)
+* [Achilles](https://github.com/OHDSI/Achilles)
+* [ETL-Synthea](https://github.com/OHDSI/ETL-Synthea)
 
-1. Terraform resources deployed in Azure
-2. Login to Azure:
+## Overview
 
-```
-az login
-az account set --subscription <subscription-id>
-```
-3. Set environment variables:
+![Overview](/docs/media/azure_overview.png)
 
-AZURE_DEVOPS_EXT_PAT: Personal Access Token created in Azure DevOps
-AZURE_DEVOPS_EXT_GITHUB_PAT: Personal Access Token Created in Github with recommended scopes -- repo, user, admin:repo_hook
+You can use [Azure DevOps pipelines](/pipelines/README.md/#pipelines) to manage your environment.  To create your environment, please review the [guide](/docs/creating_your_environment.md) for an overview.
 
-### Common Commands:
+Your administrator can follow the [administrative steps](/infra/README.md/#administrative-steps) to manage your [bootstrap resource group](/infra/terraform/bootstrap/README.md#setup-azure-bootstrap-resource-group), your [Azure AD Groups](/infra/terraform/bootstrap/README.md#setup-azure-ad-group), and your [Azure DevOps](/infra/terraform/bootstrap/README.md#setup-azure-devops) project.
 
-- Check for prerequisites (i.e. TF, az, azure devops ext, git), import pipelines to Azure DevOps (if they don't already exist)
+You can also use [terraform to manage](/infra/README.md/#running-terraform) your Azure resources in the [OMOP resource group](/infra/terraform/omop/README.md).
 
-```
-zeus init --env dev --org https://dev.azure.com/<organization> --proj <project>
-```
+You can host your [CDM in Azure SQL](/sql/README.md#cdm-notes).  You can [load your vocabularies](/docs/setup/setup_vocabulary.md) into Azure Storage so that the [Azure DevOps Vocabulary Release Pipeline](/pipelines/README.md/#vocabulary-release-pipeline) can populate your [Azure SQL CDM](/sql/README.md/#vocabulary-notes).
 
-![zeus init](./docs/zeus_init.gif)
+You can [setup Atlas and Webapi](/docs/setup/setup_atlas_webapi.md) using the [Broadsea Build Pipeline](/pipelines/README.md/#broadsea-build-pipeline) to build and push the [Broadsea webtools (for Atlas / WebApi)](/apps/broadsea-webtools/README.md) image into Azure Container Registry. You can then run the [Broadsea Release Pipeline](/pipelines/README.md/#broadsea-release-pipeline) to configure Atlas and WebApi in your Azure App Service.
 
-- Importing vocabulary files to Storage Account and inserting them into CDM:
+You can also [setup Achilles and Synthea](/docs/setup/setup_achilles_synthea.md) using the [Broadsea Build Pipeline](/pipelines/README.md/#broadsea-build-pipeline) to build and push the [Broadsea Methods (for Achilles and Synthea)](/apps/broadsea-methods/README.md) image into Azure Container Registry.  You can then run the [Broadsea Release Pipeline](/pipelines/README.md/#broadsea-release-pipeline) to perform the following steps:
 
-```
-zeus vocab upload --account-name <storage-account-name> --account-key <storage-account-key> --container <container-name> --path </path/to/vocab/files>
-zeus vocab import --env dev
-```
+1. Run an [ETL job](/apps/broadsea-methods/README.md/#synthea-etl) and use [Synthea to generate synthetic patient data](/apps/broadsea-methods/README.md/#use-synthea-to-generate-synthetic-patient-data) as an optional step
+2. Run [Achilles](/apps/broadsea-methods/README.md/#achilles) to characterize the CDM data in Azure SQL
 
-![zeus vocab](./docs/zeus_vocab.gif)
+## CDM Version
 
-- Deploy OHDSI applications to environments
+This setup supports a modified version of the CDM [v5.3.1](/sql/cdm/v5.3.1/) schema based on the [CDM v5.3.1 for SQL Server](https://github.com/OHDSI/CommonDataModel/tree/v5.3.1/Sql%20Server).
 
-```
-zeus deploy broadsea-webtools --env dev
-zeus deploy broadsea-methods --env dev
-zeus deploy achilles --env dev
+You can review more notes on the modifications in the [readme](/sql/README.md/#modifications-from-ohdsi).
+
+# Getting Started
+
+To get started, first clone the repository.
+
+```console
+git clone https://github.com/microsoft/OHDSIonAzure
 ```
 
-![zeus deploy](./docs/zeus_deploy.gif)
+You can work through the notes on [creating your environment](/docs/creating_your_environment.md) which will walk through how to set up OHDSI on Azure.
+
+### TODO Review usage here
+
+TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
+1.	Installation process
+2.	Software dependencies
+3.	Latest releases
+4.	API references
+
+# Build and Test
+TODO: Describe and show how to build your code and run the tests.
+
+# Contribute
+TODO: Explain how other users and developers can contribute to make your code better.
+
+If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
+- [ASP.NET Core](https://github.com/aspnet/Home)
+- [Visual Studio Code](https://github.com/Microsoft/vscode)
+- [Chakra Core](https://github.com/Microsoft/ChakraCore)
