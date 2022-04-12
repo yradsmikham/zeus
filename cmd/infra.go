@@ -77,6 +77,7 @@ func curlTfFiles(apiUrl string, rawUrl string, dir string) (err error) {
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
+	//fmt.Println(string(body))
 
 	var result Response
 	if err := json.Unmarshal(body, &result); err != nil { // Parse []byte to the go struct pointer
@@ -85,12 +86,21 @@ func curlTfFiles(apiUrl string, rawUrl string, dir string) (err error) {
 
 	// Loop through the data node for the FirstName
 	for _, tfFile := range result {
-		fmt.Println(tfFile.Name)
-		log.Info("Curling File from Repo: " + rawUrl + tfFile.Name)
-		cmd := exec.Command("curl", "--output-dir", dir, "-OL", rawUrl+tfFile.Name)
-		if output, err := cmd.CombinedOutput(); err != nil {
-			log.Error("%s: %s", err, output)
-			return err
+		// Need to check whether `tfFile` is a file or a directory
+		if tfFile.Type == "dir" {
+			fmt.Print("API URL: " + apiUrl + tfFile.Name)
+			fmt.Print("RAW URL: " + rawUrl + tfFile.Name)
+			fmt.Print("DIR: " + dir + "/" + tfFile.Name)
+			os.MkdirAll(dir+"/"+tfFile.Name, 0755)
+			curlTfFiles(apiUrl+"/"+tfFile.Name, rawUrl+tfFile.Name+"/", dir+"/"+tfFile.Name)
+		} else {
+			fmt.Println(tfFile.Name)
+			log.Info("Curling File from Repo: " + rawUrl + tfFile.Name)
+			cmd := exec.Command("curl", "--output-dir", dir, "-OL", rawUrl+tfFile.Name)
+			if output, err := cmd.CombinedOutput(); err != nil {
+				log.Error("%s: %s", err, string(output))
+				return err
+			}
 		}
 	}
 	return err
