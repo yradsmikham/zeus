@@ -88,14 +88,14 @@ func curlTfFiles(apiUrl string, rawUrl string, dir string) (err error) {
 	for _, tfFile := range result {
 		// Need to check whether `tfFile` is a file or a directory
 		if tfFile.Type == "dir" {
-			fmt.Print("API URL: " + apiUrl + tfFile.Name)
-			fmt.Print("RAW URL: " + rawUrl + tfFile.Name)
-			fmt.Print("DIR: " + dir + "/" + tfFile.Name)
+			//fmt.Print("API URL: " + apiUrl + tfFile.Name)
+			//fmt.Print("RAW URL: " + rawUrl + tfFile.Name)
+			//fmt.Print("DIR: " + dir + "/" + tfFile.Name)
 			os.MkdirAll(dir+"/"+tfFile.Name, 0755)
 			curlTfFiles(apiUrl+"/"+tfFile.Name, rawUrl+tfFile.Name+"/", dir+"/"+tfFile.Name)
 		} else {
 			fmt.Println(tfFile.Name)
-			log.Info("Curling File from Repo: " + rawUrl + tfFile.Name)
+			log.Info("Downloading File: " + rawUrl + tfFile.Name)
 			cmd := exec.Command("curl", "--output-dir", dir, "-OL", rawUrl+tfFile.Name)
 			if output, err := cmd.CombinedOutput(); err != nil {
 				log.Error("%s: %s", err, string(output))
