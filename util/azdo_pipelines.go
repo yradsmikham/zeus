@@ -18,12 +18,19 @@ func ExecPipeline(ctx context.Context, connection *azuredevops.Connection, app s
 		log.Error("Unable to connect to Azure DevOps.")
 		log.Fatal(err)
 	}
+	
+	/*
+		branch := "refs/heads/master"
+		repoName := "OHDISonAzure"
+		repoUrl := "https://github.com/yradsmikham/OHDSIonAzure"
+		buildRepository := build.BuildRepository{
+			DefaultBranch: &branch,
+			Name:          &repoName,
+			Url:           &repoUrl,
+		}
 
-	buildRepository := build.BuildRepository{
-		DefaultBranch: new(string),
-	}
-
-	*buildRepository.DefaultBranch = "main"
+		//*buildRepository.DefaultBranch = "main"
+	*/
 
 	definition := build.DefinitionReference{
 		Id: new(int),
@@ -32,7 +39,7 @@ func ExecPipeline(ctx context.Context, connection *azuredevops.Connection, app s
 
 	buildParameters := build.Build{
 		Definition: &definition,
-		Repository: &buildRepository,
+		//Repository: &buildRepository,
 	}
 
 	queueBuildArgs := build.QueueBuildArgs{
@@ -72,7 +79,7 @@ func ReturnBuildId(app string, project string, ctx context.Context, connection *
 	for responseValue != nil {
 		for _, pipes := range (*responseValue).Value {
 			if *pipes.Name == app {
-				log.Info("Build ID for ", app, " : ", *pipes.Id)
+				log.Info("Build ID for ", app, ": ", *pipes.Id)
 				ids = append(ids, *pipes.Id)
 				return ids, err
 			} else {
